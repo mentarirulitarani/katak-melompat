@@ -1,2 +1,0 @@
-# katak-melompat
-ppm
