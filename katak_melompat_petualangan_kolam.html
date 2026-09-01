@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Katak Melompat: Petualangan Kolam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #0f2b26;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        .font-game {
+            font-family: 'Fredoka One', cursive;
+        }
+        .glass-panel {
+            background: rgba(15, 43, 38, 0.85);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(52, 211, 153, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .btn-bounce {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+        @keyframes floatAnim {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-float {
+            animation: floatAnim 2.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col items-center justify-center relative overflow-hidden">
+
+    <!-- Game Container -->
+    <div class="relative w-full h-full max-w-4xl max-h-[900px] flex flex-col items-center justify-between p-2 md:p-4">
+        
+        <!-- Top HUD -->
+        <header class="w-full glass-panel rounded-2xl p-3 md:p-4 flex justify-between items-center z-10 border border-emerald-500/30">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-2xl">
+                    🐸
+                </div>
+                <div>
+                    <h1 class="text-xs uppercase tracking-wider text-emerald-300 font-bold">Level</h1>
+                    <div id="levelDisplay" class="text-xl md:text-2xl font-game text-emerald-100">1 - Kolam Tenang</div>
+                </div>
+            </div>
+
+            <!-- Score & Target -->
+            <div class="flex space-x-4 md:space-x-8 text-center">
+                <div>
+                    <span class="text-xs uppercase text-emerald-300 font-bold block">Skor</span>
+                    <span id="scoreDisplay" class="text-xl md:text-2xl font-game text-yellow-300">0</span>
+                </div>
+                <div>
+                    <span class="text-xs uppercase text-emerald-300 font-bold block">Target Jarak</span>
+                    <span id="targetDisplay" class="text-xl md:text-2xl font-game text-emerald-200">0/5</span>
+                </div>
+            </div>
+
+            <!-- Audio & Pause Toggle -->
+            <div class="flex space-x-2">
+                <button id="soundBtn" class="w-10 h-10 rounded-xl bg-emerald-700/40 hover:bg-emerald-600/50 flex items-center justify-center text-lg transition border border-emerald-400/30">
+                    🔊
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Canvas Area -->
+        <main class="relative w-full flex-1 my-2 rounded-2xl overflow-hidden shadow-2xl border-2 border-emerald-600/30 bg-teal-950">
+            <canvas id="gameCanvas" class="w-full h-full block cursor-pointer"></canvas>
+
+            <!-- Charge Power Visual Indicator (Bottom Overlay) -->
+            <div id="powerContainer" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-64 md:w-80 bg-emerald-950/80 p-2 rounded-xl border border-emerald-400/40 opacity-0 transition-opacity duration-200">
+                <div class="text-center text-xs font-bold text-emerald-200 mb-1 flex justify-between px-1">
+                    <span>DAYA LOMPAT</span>
+                    <span id="powerPercent">0%</span>
+                </div>
+                <div class="w-full h-4 bg-emerald-900 rounded-lg overflow-hidden border border-emerald-700">
+                    <div id="powerBar" class="h-full w-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 transition-all duration-75"></div>
+                </div>
+            </div>
+
+            <!-- Tap/Space Instruction Overlay on Canvas -->
+            <div id="instructionBanner" class="absolute top-6 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur px-4 py-2 rounded-full border border-emerald-400/30 text-xs md:text-sm text-emerald-200 text-center pointer-events-none animate-bounce">
+                💡 Tekan & Tahan <span class="bg-emerald-600 text-white px-2 py-0.5 rounded font-bold">SPACE</span> atau <span class="bg-emerald-600 text-white px-2 py-0.5 rounded font-bold">TAP LAYAR</span> lalu Lepas!
+            </div>
+        </main>
+
+        <!-- Footer Control Helper -->
+        <footer class="w-full text-center text-xs text-emerald-400/70 font-bold py-1">
+            Katak Lompat v1.0 • Kontrol Mobile: Tap & Hold | PC: Space Bar Hold
+        </footer>
+    </div>
+
+    <!-- Modal Screens Overlay -->
+    <!-- 1. Start Menu Modal -->
+    <div id="startModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-md w-full text-center border-2 border-emerald-400/40 relative">
+            <div class="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-emerald-400 animate-float text-5xl">
+                🐸
+            </div>
+            <h2 class="text-3xl font-game text-emerald-300 mb-2">KATAK LOMPAT</h2>
+            <p class="text-emerald-100 text-sm mb-6 leading-relaxed">
+                Bantu Katak melompati teratai di kolam! Tahan tombol untuk mengisi tenaga lompatan, lalu lepaskan dengan tepat agar tidak tenggelam di air.
+            </p>
+
+            <div class="bg-emerald-900/50 p-4 rounded-xl text-left text-xs text-emerald-200 space-y-2 mb-6 border border-emerald-700/50">
+                <div class="flex items-center space-x-2">
+                    <span class="text-lg">⌨️</span>
+                    <span><strong>Laptop/PC:</strong> Tahan <kbd class="bg-emerald-800 px-1.5 py-0.5 rounded border border-emerald-600">Spacebar</kbd> lalu lepaskan.</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-lg">📱</span>
+                    <span><strong>HP/Tablet:</strong> Sentuh & Tahan Layar lalu lepaskan.</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-lg">🏆</span>
+                    <span>Selesaikan semua level dengan rintangan teratai bergerak!</span>
+                </div>
+            </div>
+
+            <button id="startBtn" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-game text-xl rounded-2xl shadow-lg border border-emerald-300/50 btn-bounce">
+                MULAI PETUALANGAN
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. Level Complete Modal -->
+    <div id="levelModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 hidden">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-md w-full text-center border-2 border-yellow-400/40">
+            <div class="text-5xl mb-2">🌟</div>
+            <h2 class="text-3xl font-game text-yellow-300 mb-1">LEVEL SELESAI!</h2>
+            <p id="levelCompleteSub" class="text-emerald-200 text-sm mb-4">Kamu berhasil menyeberangi kolam!</p>
+
+            <div class="bg-emerald-900/60 p-4 rounded-2xl my-4 border border-emerald-500/30">
+                <div class="text-xs text-emerald-300 uppercase font-bold">Total Skor Saat Ini</div>
+                <div id="levelScoreText" class="text-4xl font-game text-yellow-400 my-1">0</div>
+            </div>
+
+            <button id="nextLevelBtn" class="w-full py-3.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-white font-game text-lg rounded-xl shadow-lg border border-yellow-300/50 btn-bounce">
+                LEVEL SELANJUTNYA ➔
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. Game Over Modal -->
+    <div id="gameOverModal" class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 hidden">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-md w-full text-center border-2 border-red-500/40">
+            <div class="text-5xl mb-2">💦</div>
+            <h2 class="text-3xl font-game text-red-400 mb-1">BYURRR! TENGGELAM!</h2>
+            <p class="text-emerald-200 text-sm mb-4">Katak melompat terlalu jauh atau mis-kalkulasi teratai!</p>
+
+            <div class="bg-emerald-900/60 p-4 rounded-2xl my-4 border border-emerald-500/30">
+                <div class="text-xs text-emerald-300 uppercase font-bold">Skor Akhir</div>
+                <div id="finalScoreText" class="text-4xl font-game text-yellow-400 my-1">0</div>
+            </div>
+
+            <div class="flex space-x-3">
+                <button id="retryBtn" class="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-game text-lg rounded-xl shadow-lg border border-emerald-300/50 btn-bounce">
+                    COBA LAGI 🔄
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Script Logic -->
+    <script>
+        // Web Audio API Synthesizer Sound Generator (No external files required)
+        class AudioFX {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playJump() {
+                if (this.muted || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                
+                const now = this.ctx.currentTime;
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(450, now + 0.2);
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+
+            playSplash() {
+                if (this.muted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(60, now + 0.35);
+
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+
+            playSuccess() {
+                if (this.muted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                [400, 550, 700].forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+
+                    gain.gain.setValueAtTime(0.2, now + i * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.01, now + i * 0.08 + 0.15);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + i * 0.08);
+                    osc.stop(now + i * 0.08 + 0.15);
+                });
+            }
+
+            playWin() {
+                if (this.muted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.12);
+
+                    gain.gain.setValueAtTime(0.3, now + i * 0.12);
+                    gain.gain.linearRampToValueAtTime(0.01, now + i * 0.12 + 0.25);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + i * 0.12);
+                    osc.stop(now + i * 0.12 + 0.25);
+                });
+            }
+        }
+
+        const audio = new AudioFX();
+
+        // Levels configuration
+        const LEVEL_DATA = [
+            { id: 1, name: "1 - Kolam Tenang", targetJumps: 5, padSpeed: 0, padRadius: 45, sinkTime: 0 },
+            { id: 2, name: "2 - Rawa Berangin", targetJumps: 7, padSpeed: 1.2, padRadius: 42, sinkTime: 0 },
+            { id: 3, name: "3 - Teratai Goyang", targetJumps: 9, padSpeed: 2.0, padRadius: 38, sinkTime: 0 },
+            { id: 4, name: "4 - Teratai Rapuh", targetJumps: 10, padSpeed: 1.5, padRadius: 36, sinkTime: 2500 },
+            { id: 5, name: "5 - Maestro Kolam Emas", targetJumps: 12, padSpeed: 2.5, padRadius: 34, sinkTime: 2000 }
+        ];
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game State Variables
+        let gameState = 'START'; // 'START', 'PLAYING', 'LANDING', 'SPLASH', 'LEVEL_WIN', 'GAME_OVER'
+        let currentLevelIndex = 0;
+        let score = 0;
+        let successfulJumps = 0;
+
+        // Input & Power Charging
+        let isCharging = false;
+        let chargePower = 0; // 0 to 100
+        let chargeDirection = 1;
+
+        // Visual Particles & Ripples
+        let particles = [];
+        let ripples = [];
+        let flies = [];
+
+        // Dynamic Sizing
+        let width = canvas.width;
+        let height = canvas.height;
+
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            width = canvas.width;
+            height = canvas.height;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // Frog Character Object
+        const frog = {
+            x: 0,
+            y: 0,
+            radius: 20,
+            startX: 0,
+            startY: 0,
+            targetX: 0,
+            targetY: 0,
+            jumpProgress: 0,
+            jumpHeight: 0,
+            maxJumpDist: 0,
+            angle: 0,
+            scaleX: 1,
+            scaleY: 1,
+            isAirborne: false,
+
+            reset(x, y) {
+                this.x = x;
+                this.y = y;
+                this.startX = x;
+                this.startY = y;
+                this.targetX = x;
+                this.targetY = y;
+                this.jumpProgress = 0;
+                this.isAirborne = false;
+                this.scaleX = 1;
+                this.scaleY = 1;
+            },
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Calculate squeeze/stretch based on charging or jumping
+                if (isCharging) {
+                    this.scaleX = 1 + (chargePower / 200);
+                    this.scaleY = 1 - (chargePower / 300);
+                } else if (this.isAirborne) {
+                    this.scaleX = 0.85;
+                    this.scaleY = 1.25;
+                } else {
+                    this.scaleX = 1;
+                    this.scaleY = 1;
+                }
+
+                ctx.scale(this.scaleX, this.scaleY);
+
+                // Shadow under frog when jumping
+                if (this.isAirborne) {
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 30, this.radius * 0.8, this.radius * 0.4, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // Frog Body (Green Oval)
+                ctx.fillStyle = '#4ade80';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.radius * 1.1, this.radius, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#15803d';
+                ctx.stroke();
+
+                // Eyes
+                // Left Eye
+                ctx.fillStyle = '#4ade80';
+                ctx.beginPath();
+                ctx.arc(-this.radius * 0.55, -this.radius * 0.7, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(-this.radius * 0.55, -this.radius * 0.7, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(-this.radius * 0.5, -this.radius * 0.7, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Right Eye
+                ctx.fillStyle = '#4ade80';
+                ctx.beginPath();
+                ctx.arc(this.radius * 0.55, -this.radius * 0.7, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(this.radius * 0.55, -this.radius * 0.7, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(this.radius * 0.6, -this.radius * 0.7, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Cheeks (Blush)
+                ctx.fillStyle = 'rgba(251, 113, 133, 0.6)';
+                ctx.beginPath();
+                ctx.arc(-this.radius * 0.7, 2, 4, 0, Math.PI * 2);
+                ctx.arc(this.radius * 0.7, 2, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Cute Smile
+                ctx.strokeStyle = '#166534';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 2, 5, 0.1 * Math.PI, 0.9 * Math.PI);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        };
+
+        // Lily Pads Management
+        let lilyPads = [];
+
+        class LilyPad {
+            constructor(x, y, radius, speed = 0, isCurrent = false) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.speed = speed;
+                this.dir = Math.random() < 0.5 ? 1 : -1;
+                this.isCurrent = isCurrent;
+                this.flowerColor = ['#f472b6', '#fbbf24', '#a78bfa'][Math.floor(Math.random() * 3)];
+                this.sinking = false;
+                this.sinkTimer = 0;
+                this.opacity = 1;
+            }
+
+            update(canvasWidth) {
+                if (this.speed !== 0 && !this.isCurrent) {
+                    this.x += this.speed * this.dir;
+                    // Bounce off edge padding
+                    const padding = this.radius + 20;
+                    if (this.x < padding) {
+                        this.x = padding;
+                        this.dir *= -1;
+                    } else if (this.x > canvasWidth - padding) {
+                        this.x = canvasWidth - padding;
+                        this.dir *= -1;
+                    }
+                }
+            }
+
+            draw() {
+                if (this.opacity <= 0) return;
+
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                ctx.translate(this.x, this.y);
+
+                // Water Shadow under lily pad
+                ctx.fillStyle = 'rgba(6, 78, 59, 0.4)';
+                ctx.beginPath();
+                ctx.arc(4, 6, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Green Lily Pad Base
+                ctx.fillStyle = this.isCurrent ? '#10b981' : '#059669';
+                ctx.beginPath();
+                // Draw circle with a triangular wedge cut out (classic lily pad look)
+                ctx.arc(0, 0, this.radius, 0.25 * Math.PI, 1.9 * Math.PI);
+                ctx.lineTo(0, 0);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#047857';
+                ctx.stroke();
+
+                // Veins on Pad
+                ctx.strokeStyle = 'rgba(167, 243, 208, 0.3)';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 4; i++) {
+                    const angle = (i * Math.PI / 2.5) + 0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(angle) * (this.radius * 0.8), Math.sin(angle) * (this.radius * 0.8));
+                    ctx.stroke();
+                }
+
+                // Decorative Flower in Center
+                ctx.fillStyle = this.flowerColor;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius * 0.25, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius * 0.1, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        // Create Flies/Bugs for extra score
+        function spawnFlies(padX, padY) {
+            if (Math.random() < 0.6) {
+                flies.push({
+                    x: padX + (Math.random() - 0.5) * 40,
+                    y: padY - 30 - Math.random() * 30,
+                    radius: 4,
+                    collected: false,
+                    angle: Math.random() * Math.PI * 2
+                });
+            }
+        }
+
+        function createPondLayout() {
+            lilyPads = [];
+            flies = [];
+
+            const lvl = LEVEL_DATA[currentLevelIndex];
+            const padRadius = lvl.padRadius;
+            const startX = width / 2;
+            const startY = height - 120;
+
+            // Current Starting Lily Pad
+            lilyPads.push(new LilyPad(startX, startY, padRadius + 10, 0, true));
+            frog.reset(startX, startY);
+
+            // Target Lily Pad
+            const targetX = width * (0.3 + Math.random() * 0.4);
+            const targetY = height * 0.35;
+
+            lilyPads.push(new LilyPad(targetX, targetY, padRadius, lvl.padSpeed, false));
+            spawnFlies(targetX, targetY);
+
+            // Set HUD target text
+            document.getElementById('targetDisplay').innerText = `${successfulJumps}/${lvl.targetJumps}`;
+            document.getElementById('levelDisplay').innerText = lvl.name;
+        }
+
+        function startCharging() {
+            if (gameState !== 'PLAYING' || frog.isAirborne) return;
+            audio.init();
+            isCharging = true;
+            document.getElementById('powerContainer').classList.remove('opacity-0');
+        }
+
+        function releaseJump() {
+            if (!isCharging || gameState !== 'PLAYING') return;
+            isCharging = false;
+            document.getElementById('powerContainer').classList.add('opacity-0');
+
+            // Launch Frog!
+            const currentPad = lilyPads[0];
+            const targetPad = lilyPads[1];
+
+            // Calculate jump vector towards target pad
+            const distanceFactor = (chargePower / 100);
+            
+            // Max jump distance is tuned to reach slightly past the target pad
+            const distToTarget = Math.hypot(targetPad.x - currentPad.x, targetPad.y - currentPad.y);
+            const totalJumpDist = distToTarget * (distanceFactor * 1.5);
+
+            // Direction vector
+            const angle = Math.atan2(targetPad.y - currentPad.y, targetPad.x - currentPad.x);
+
+            frog.startX = frog.x;
+            frog.startY = frog.y;
+            frog.targetX = frog.x + Math.cos(angle) * totalJumpDist;
+            frog.targetY = frog.y + Math.sin(angle) * totalJumpDist;
+
+            frog.jumpProgress = 0;
+            frog.maxJumpDist = totalJumpDist;
+            frog.isAirborne = true;
+
+            audio.playJump();
+            chargePower = 0;
+        }
+
+        // Keyboard Spacebar events
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !e.repeat) {
+                e.preventDefault();
+                startCharging();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                releaseJump();
+            }
+        });
+
+        // Touch & Mouse Canvas Events
+        canvas.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startCharging();
+        });
+        canvas.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            releaseJump();
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startCharging();
+        });
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            releaseJump();
+        });
+
+        function createSplash(x, y) {
+            for (let i = 0; i < 16; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2 + Math.random() * 5;
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    radius: 3 + Math.random() * 4,
+                    color: '#a5f3fc',
+                    life: 1,
+                    decay: 0.03
+                });
+            }
+            ripples.push({ x, y, radius: 5, maxRadius: 40, opacity: 1 });
+        }
+
+        function createSparkles(x, y) {
+            for (let i = 0; i < 12; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 3;
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    radius: 2 + Math.random() * 3,
+                    color: '#fef08a',
+                    life: 1,
+                    decay: 0.02
+                });
+            }
+        }
+
+        function checkLanding() {
+            const targetPad = lilyPads[1];
+            const dist = Math.hypot(frog.x - targetPad.x, frog.y - targetPad.y);
+
+            // Check if landed inside lily pad radius
+            if (dist <= targetPad.radius + (frog.radius * 0.5)) {
+                // SUCCESS LANDING!
+                audio.playSuccess();
+                createSparkles(frog.x, frog.y);
+
+                // Calculate Precision Bonus
+                let bonus = 100;
+                if (dist < 12) {
+                    bonus += 50; // Perfect Center Bonus!
+                }
+
+                score += bonus;
+                successfulJumps++;
+
+                document.getElementById('scoreDisplay').innerText = score;
+                
+                const lvl = LEVEL_DATA[currentLevelIndex];
+                document.getElementById('targetDisplay').innerText = `${successfulJumps}/${lvl.targetJumps}`;
+
+                // Check Level Completion
+                if (successfulJumps >= lvl.targetJumps) {
+                    setTimeout(() => {
+                        audio.playWin();
+                        if (currentLevelIndex < LEVEL_DATA.length - 1) {
+                            document.getElementById('levelScoreText').innerText = score;
+                            document.getElementById('levelModal').classList.remove('hidden');
+                        } else {
+                            // Won all levels
+                            document.getElementById('levelCompleteSub').innerText = "SELAMAT! Kamu Menamatkan Seluruh Kolam!";
+                            document.getElementById('levelScoreText').innerText = score;
+                            document.getElementById('levelModal').classList.remove('hidden');
+                        }
+                    }, 400);
+                } else {
+                    // Shift pads for next jump animation
+                    setTimeout(shiftPadsForward, 300);
+                }
+            } else {
+                // SPLASH - FELL IN WATER
+                audio.playSplash();
+                createSplash(frog.x, frog.y);
+                gameState = 'SPLASH';
+
+                setTimeout(() => {
+                    document.getElementById('finalScoreText').innerText = score;
+                    document.getElementById('gameOverModal').classList.remove('hidden');
+                }, 800);
+            }
+        }
+
+        function shiftPadsForward() {
+            // Target pad becomes starting pad, new target pad generated
+            lilyPads.shift(); // Remove old start pad
+            lilyPads[0].isCurrent = true;
+
+            // Smoothly move frog & pads back down to starting position base
+            const lvl = LEVEL_DATA[currentLevelIndex];
+            const newTargetX = width * (0.25 + Math.random() * 0.5);
+            const newTargetY = height * 0.35;
+
+            lilyPads.push(new LilyPad(newTargetX, newTargetY, lvl.padRadius, lvl.padSpeed, false));
+            spawnFlies(newTargetX, newTargetY);
+
+            // Reposition frog smoothly to new current pad
+            frog.reset(lilyPads[0].x, lilyPads[0].y);
+        }
+
+        function update() {
+            // Power Charging Oscillate
+            if (isCharging) {
+                chargePower += 2.5 * chargeDirection;
+                if (chargePower >= 100) {
+                    chargePower = 100;
+                    chargeDirection = -1;
+                } else if (chargePower <= 0) {
+                    chargePower = 0;
+                    chargeDirection = 1;
+                }
+                document.getElementById('powerBar').style.width = chargePower + '%';
+                document.getElementById('powerPercent').innerText = Math.round(chargePower) + '%';
+            }
+
+            // Lily pads update
+            lilyPads.forEach(pad => pad.update(width));
+
+            // Flies Floating & Collection
+            flies.forEach(fly => {
+                fly.angle += 0.05;
+                fly.y += Math.sin(fly.angle) * 0.5;
+
+                // Fly eat collision
+                if (frog.isAirborne && !fly.collected) {
+                    const d = Math.hypot(frog.x - fly.x, frog.y - fly.y);
+                    if (d < frog.radius + 15) {
+                        fly.collected = true;
+                        score += 50;
+                        document.getElementById('scoreDisplay').innerText = score;
+                        createSparkles(fly.x, fly.y);
+                    }
+                }
+            });
+
+            // Frog Airborne Arc Physics
+            if (frog.isAirborne) {
+                frog.jumpProgress += 0.045;
+
+                if (frog.jumpProgress >= 1) {
+                    frog.jumpProgress = 1;
+                    frog.isAirborne = false;
+                    frog.x = frog.targetX;
+                    frog.y = frog.targetY;
+                    checkLanding();
+                } else {
+                    // Linear interpolation for X, Y plus arc curve for height
+                    frog.x = frog.startX + (frog.targetX - frog.startX) * frog.jumpProgress;
+                    frog.y = frog.startY + (frog.targetY - frog.startY) * frog.jumpProgress;
+
+                    // Arc Height parabola: h = 4 * H * t * (1 - t)
+                    const arcHeight = 120 * Math.sin(frog.jumpProgress * Math.PI);
+                    frog.y -= arcHeight;
+                }
+            }
+
+            // Update Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= p.decay;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            // Update Ripples
+            for (let i = ripples.length - 1; i >= 0; i--) {
+                const r = ripples[i];
+                r.radius += 1.5;
+                r.opacity -= 0.025;
+                if (r.opacity <= 0) ripples.splice(i, 1);
+            }
+        }
+
+        function drawBackground() {
+            // Water Gradient
+            const grad = ctx.createLinearGradient(0, 0, 0, height);
+            grad.addColorStop(0, '#042f2e');
+            grad.addColorStop(0.5, '#0d9488');
+            grad.addColorStop(1, '#115e59');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Subtle Water Waves Lines
+            ctx.strokeStyle = 'rgba(204, 251, 241, 0.08)';
+            ctx.lineWidth = 2;
+            const time = Date.now() * 0.001;
+            for (let y = 40; y < height; y += 60) {
+                ctx.beginPath();
+                for (let x = 0; x < width; x += 20) {
+                    const waveY = y + Math.sin(x * 0.02 + time) * 4;
+                    if (x === 0) ctx.moveTo(x, waveY);
+                    else ctx.lineTo(x, waveY);
+                }
+                ctx.stroke();
+            }
+
+            // Draw Ripples
+            ripples.forEach(r => {
+                ctx.strokeStyle = `rgba(165, 243, 252, ${r.opacity})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+                ctx.stroke();
+            });
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, width, height);
+
+            // 1. Draw Background Water
+            drawBackground();
+
+            // 2. Trajectory Hint Arc (when charging power)
+            if (isCharging && lilyPads.length > 1) {
+                const currentPad = lilyPads[0];
+                const targetPad = lilyPads[1];
+                const distToTarget = Math.hypot(targetPad.x - currentPad.x, targetPad.y - currentPad.y);
+                const totalJumpDist = distToTarget * ((chargePower / 100) * 1.5);
+                const angle = Math.atan2(targetPad.y - currentPad.y, targetPad.x - currentPad.x);
+
+                const projectedX = currentPad.x + Math.cos(angle) * totalJumpDist;
+                const projectedY = currentPad.y + Math.sin(angle) * totalJumpDist;
+
+                // Dotted arc line
+                ctx.save();
+                ctx.strokeStyle = 'rgba(254, 240, 138, 0.7)';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([6, 6]);
+                ctx.beginPath();
+                ctx.moveTo(currentPad.x, currentPad.y);
+                ctx.quadraticCurveTo(
+                    (currentPad.x + projectedX) / 2,
+                    Math.min(currentPad.y, projectedY) - 80,
+                    projectedX,
+                    projectedY
+                );
+                ctx.stroke();
+
+                // Target Marker Crosshair
+                ctx.fillStyle = '#fde047';
+                ctx.beginPath();
+                ctx.arc(projectedX, projectedY, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // 3. Draw Lily Pads
+            lilyPads.forEach(pad => pad.draw());
+
+            // 4. Draw Flies
+            flies.forEach(fly => {
+                if (!fly.collected) {
+                    ctx.save();
+                    ctx.fillStyle = '#fef08a';
+                    ctx.beginPath();
+                    ctx.arc(fly.x, fly.y, fly.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Small wings animation
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.beginPath();
+                    ctx.ellipse(fly.x - 3, fly.y - 3, 4, 2, Math.PI / 4, 0, Math.PI * 2);
+                    ctx.ellipse(fly.x + 3, fly.y - 3, 4, 2, -Math.PI / 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            });
+
+            // 5. Draw Frog Character
+            if (gameState !== 'SPLASH') {
+                frog.draw();
+            }
+
+            // 6. Draw Particles (Splashes / Sparkles)
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            });
+        }
+
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start / Restart Handlers
+        function startGame() {
+            score = 0;
+            successfulJumps = 0;
+            currentLevelIndex = 0;
+            gameState = 'PLAYING';
+
+            document.getElementById('scoreDisplay').innerText = '0';
+            document.getElementById('startModal').classList.add('hidden');
+            document.getElementById('gameOverModal').classList.add('hidden');
+            document.getElementById('levelModal').classList.add('hidden');
+
+            resizeCanvas();
+            createPondLayout();
+        }
+
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        
+        document.getElementById('retryBtn').addEventListener('click', startGame);
+
+        document.getElementById('nextLevelBtn').addEventListener('click', () => {
+            if (currentLevelIndex < LEVEL_DATA.length - 1) {
+                currentLevelIndex++;
+                successfulJumps = 0;
+                gameState = 'PLAYING';
+                document.getElementById('levelModal').classList.add('hidden');
+                createPondLayout();
+            } else {
+                startGame();
+            }
+        });
+
+        // Sound Mute Toggle
+        const soundBtn = document.getElementById('soundBtn');
+        soundBtn.addEventListener('click', () => {
+            audio.muted = !audio.muted;
+            soundBtn.innerText = audio.muted ? '🔇' : '🔊';
+        });
+
+        // Init Game Engine Loop on Window Load
+        window.onload = () => {
+            resizeCanvas();
+            gameLoop();
+        };
+    </script>
+</body>
+</html>
