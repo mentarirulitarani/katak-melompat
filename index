@@ -2,184 +2,187 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Katak Melompat: Petualangan Kolam</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <style>
         * {
             user-select: none;
             -webkit-user-select: none;
+            -webkit-touch-callout: none;
             touch-action: manipulation;
         }
-        body {
-            font-family: 'Quicksand', sans-serif;
-            background-color: #0f2b26;
-            color: #ffffff;
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
             overflow: hidden;
+            background-color: #061a14;
+            font-family: 'Quicksand', sans-serif;
         }
         .font-game {
             font-family: 'Fredoka One', cursive;
         }
         .glass-panel {
-            background: rgba(15, 43, 38, 0.85);
-            backdrop-filter: blur(8px);
-            border: 2px solid rgba(52, 211, 153, 0.3);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background: rgba(15, 43, 38, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px solid rgba(52, 211, 153, 0.35);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
         }
         .btn-bounce {
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.2s ease;
         }
         .btn-bounce:active {
             transform: scale(0.95);
         }
         @keyframes floatAnim {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
+            50% { transform: translateY(-8px); }
         }
         .animate-float {
             animation: floatAnim 2.5s ease-in-out infinite;
         }
     </style>
 </head>
-<body class="w-screen h-screen flex flex-col items-center justify-center relative overflow-hidden">
+<body class="w-screen h-screen flex flex-col items-center justify-between relative overflow-hidden select-none">
 
-    <!-- Game Container -->
-    <div class="relative w-full h-full max-w-4xl max-h-[900px] flex flex-col items-center justify-between p-2 md:p-4">
+    <!-- Game Layout Container -->
+    <div class="relative w-full h-full max-w-4xl flex flex-col items-center justify-between p-2 sm:p-4 z-10">
         
-        <!-- Top HUD -->
-        <header class="w-full glass-panel rounded-2xl p-3 md:p-4 flex justify-between items-center z-10 border border-emerald-500/30">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-2xl">
+        <!-- Top HUD Header -->
+        <header class="w-full glass-panel rounded-2xl p-2.5 sm:p-4 flex justify-between items-center z-20 border border-emerald-500/30 shrink-0">
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-xl sm:text-2xl shadow-inner">
                     🐸
                 </div>
                 <div>
-                    <h1 class="text-xs uppercase tracking-wider text-emerald-300 font-bold">Level</h1>
-                    <div id="levelDisplay" class="text-xl md:text-2xl font-game text-emerald-100">1 - Kolam Tenang</div>
+                    <h1 class="text-[10px] sm:text-xs uppercase tracking-wider text-emerald-300 font-bold">Tingkat</h1>
+                    <div id="levelDisplay" class="text-sm sm:text-xl font-game text-emerald-100 leading-tight">1 - Kolam Tenang</div>
                 </div>
             </div>
 
             <!-- Score & Target -->
-            <div class="flex space-x-4 md:space-x-8 text-center">
+            <div class="flex space-x-4 sm:space-x-8 text-center">
                 <div>
-                    <span class="text-xs uppercase text-emerald-300 font-bold block">Skor</span>
-                    <span id="scoreDisplay" class="text-xl md:text-2xl font-game text-yellow-300">0</span>
+                    <span class="text-[10px] sm:text-xs uppercase text-emerald-300 font-bold block">Skor</span>
+                    <span id="scoreDisplay" class="text-base sm:text-2xl font-game text-yellow-300 drop-shadow">0</span>
                 </div>
                 <div>
-                    <span class="text-xs uppercase text-emerald-300 font-bold block">Target Jarak</span>
-                    <span id="targetDisplay" class="text-xl md:text-2xl font-game text-emerald-200">0/5</span>
+                    <span class="text-[10px] sm:text-xs uppercase text-emerald-300 font-bold block">Target</span>
+                    <span id="targetDisplay" class="text-base sm:text-2xl font-game text-emerald-200">0/5</span>
                 </div>
             </div>
 
-            <!-- Audio & Pause Toggle -->
-            <div class="flex space-x-2">
-                <button id="soundBtn" class="w-10 h-10 rounded-xl bg-emerald-700/40 hover:bg-emerald-600/50 flex items-center justify-center text-lg transition border border-emerald-400/30">
-                    🔊
-                </button>
-            </div>
+            <!-- Sound Toggle Button -->
+            <button id="soundBtn" aria-label="Toggle Sound" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-emerald-700/40 hover:bg-emerald-600/50 flex items-center justify-center text-lg sm:text-xl transition border border-emerald-400/40 active:scale-90">
+                🔊
+            </button>
         </header>
 
-        <!-- Main Canvas Area -->
-        <main class="relative w-full flex-1 my-2 rounded-2xl overflow-hidden shadow-2xl border-2 border-emerald-600/30 bg-teal-950">
-            <canvas id="gameCanvas" class="w-full h-full block cursor-pointer"></canvas>
+        <!-- Main Game Canvas Container -->
+        <main class="relative w-full flex-1 my-2 rounded-2xl overflow-hidden shadow-2xl border-2 border-emerald-600/40 bg-teal-950 flex items-center justify-center">
+            <canvas id="gameCanvas" class="w-full h-full block cursor-pointer touch-none"></canvas>
 
             <!-- Charge Power Visual Indicator (Bottom Overlay) -->
-            <div id="powerContainer" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-64 md:w-80 bg-emerald-950/80 p-2 rounded-xl border border-emerald-400/40 opacity-0 transition-opacity duration-200">
+            <div id="powerContainer" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-64 sm:w-80 bg-emerald-950/90 p-2.5 rounded-xl border border-emerald-400/50 opacity-0 transition-opacity duration-150 pointer-events-none shadow-xl">
                 <div class="text-center text-xs font-bold text-emerald-200 mb-1 flex justify-between px-1">
                     <span>DAYA LOMPAT</span>
-                    <span id="powerPercent">0%</span>
+                    <span id="powerPercent" class="text-yellow-300 font-game">0%</span>
                 </div>
-                <div class="w-full h-4 bg-emerald-900 rounded-lg overflow-hidden border border-emerald-700">
+                <div class="w-full h-4 bg-emerald-900/80 rounded-lg overflow-hidden border border-emerald-700">
                     <div id="powerBar" class="h-full w-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 transition-all duration-75"></div>
                 </div>
             </div>
 
-            <!-- Tap/Space Instruction Overlay on Canvas -->
-            <div id="instructionBanner" class="absolute top-6 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur px-4 py-2 rounded-full border border-emerald-400/30 text-xs md:text-sm text-emerald-200 text-center pointer-events-none animate-bounce">
-                💡 Tekan & Tahan <span class="bg-emerald-600 text-white px-2 py-0.5 rounded font-bold">SPACE</span> atau <span class="bg-emerald-600 text-white px-2 py-0.5 rounded font-bold">TAP LAYAR</span> lalu Lepas!
+            <!-- Instruction Overlay Banner -->
+            <div id="instructionBanner" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur px-3 py-1.5 rounded-full border border-emerald-400/40 text-[11px] sm:text-xs text-emerald-200 text-center pointer-events-none animate-bounce shadow-md">
+                💡 Tekan & Tahan <span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded font-bold">SPACE</span> / <span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded font-bold">TAP LAYAR</span> lalu Lepas!
             </div>
         </main>
 
         <!-- Footer Control Helper -->
-        <footer class="w-full text-center text-xs text-emerald-400/70 font-bold py-1">
-            Katak Lompat v1.0 • Kontrol Mobile: Tap & Hold | PC: Space Bar Hold
+        <footer class="w-full text-center text-[11px] sm:text-xs text-emerald-400/80 font-medium py-1 shrink-0">
+            Kontrol HP: Sentuh & Tahan Layar | Laptop/PC: Tahan Tombol Spacebar
         </footer>
     </div>
 
-    <!-- Modal Screens Overlay -->
     <!-- 1. Start Menu Modal -->
-    <div id="startModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-        <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-md w-full text-center border-2 border-emerald-400/40 relative">
-            <div class="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-emerald-400 animate-float text-5xl">
+    <div id="startModal" class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl max-w-md w-full text-center border-2 border-emerald-400/50 relative shadow-2xl">
+            <div class="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-emerald-400 animate-float text-5xl shadow-lg">
                 🐸
             </div>
-            <h2 class="text-3xl font-game text-emerald-300 mb-2">KATAK LOMPAT</h2>
-            <p class="text-emerald-100 text-sm mb-6 leading-relaxed">
-                Bantu Katak melompati teratai di kolam! Tahan tombol untuk mengisi tenaga lompatan, lalu lepaskan dengan tepat agar tidak tenggelam di air.
+            <h2 class="text-3xl sm:text-4xl font-game text-emerald-300 mb-2 drop-shadow">KATAK LOMPAT</h2>
+            <p class="text-emerald-100 text-xs sm:text-sm mb-5 leading-relaxed font-medium">
+                Bantu Si Katak menyeberangi kolam! Tahan untuk mengisi daya lompatan, perhatikan garis petunjuk, lalu lepaskan dengan tepat agar tidak tenggelam.
             </p>
 
-            <div class="bg-emerald-900/50 p-4 rounded-xl text-left text-xs text-emerald-200 space-y-2 mb-6 border border-emerald-700/50">
+            <div class="bg-emerald-950/60 p-3.5 rounded-2xl text-left text-xs text-emerald-200 space-y-2 mb-6 border border-emerald-700/60">
                 <div class="flex items-center space-x-2">
-                    <span class="text-lg">⌨️</span>
-                    <span><strong>Laptop/PC:</strong> Tahan <kbd class="bg-emerald-800 px-1.5 py-0.5 rounded border border-emerald-600">Spacebar</kbd> lalu lepaskan.</span>
+                    <span class="text-base">⌨️</span>
+                    <span><strong>Laptop/PC:</strong> Tahan <kbd class="bg-emerald-800 px-1.5 py-0.5 rounded border border-emerald-600 font-mono text-[10px]">Spacebar</kbd> lalu lepas.</span>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <span class="text-lg">📱</span>
-                    <span><strong>HP/Tablet:</strong> Sentuh & Tahan Layar lalu lepaskan.</span>
+                    <span class="text-base">📱</span>
+                    <span><strong>HP/Tablet:</strong> Sentuh & Tahan Layar lalu lepas.</span>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <span class="text-lg">🏆</span>
-                    <span>Selesaikan semua level dengan rintangan teratai bergerak!</span>
+                    <span class="text-base">🎯</span>
+                    <span>Dapatkan bonus poin mendarat tepat di tengah teratai!</span>
                 </div>
             </div>
 
-            <button id="startBtn" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-game text-xl rounded-2xl shadow-lg border border-emerald-300/50 btn-bounce">
+            <button id="startBtn" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-game text-xl rounded-2xl shadow-xl border border-emerald-300/50 btn-bounce cursor-pointer">
                 MULAI PETUALANGAN
             </button>
         </div>
     </div>
 
     <!-- 2. Level Complete Modal -->
-    <div id="levelModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 hidden">
-        <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-md w-full text-center border-2 border-yellow-400/40">
-            <div class="text-5xl mb-2">🌟</div>
+    <div id="levelModal" class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 hidden">
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl max-w-md w-full text-center border-2 border-yellow-400/50 shadow-2xl">
+            <div class="text-5xl mb-2 animate-bounce">🌟</div>
             <h2 class="text-3xl font-game text-yellow-300 mb-1">LEVEL SELESAI!</h2>
-            <p id="levelCompleteSub" class="text-emerald-200 text-sm mb-4">Kamu berhasil menyeberangi kolam!</p>
+            <p id="levelCompleteSub" class="text-emerald-200 text-xs sm:text-sm mb-4">Kamu berhasil menyeberangi kolam ini!</p>
 
-            <div class="bg-emerald-900/60 p-4 rounded-2xl my-4 border border-emerald-500/30">
-                <div class="text-xs text-emerald-300 uppercase font-bold">Total Skor Saat Ini</div>
+            <div class="bg-emerald-950/70 p-4 rounded-2xl my-4 border border-emerald-500/40">
+                <div class="text-xs text-emerald-300 uppercase font-bold tracking-wider">Total Skor Saat Ini</div>
                 <div id="levelScoreText" class="text-4xl font-game text-yellow-400 my-1">0</div>
             </div>
 
-            <button id="nextLevelBtn" class="w-full py-3.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-white font-game text-lg rounded-xl shadow-lg border border-yellow-300/50 btn-bounce">
+            <button id="nextLevelBtn" class="w-full py-3.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-white font-game text-lg rounded-2xl shadow-xl border border-yellow-300/50 btn-bounce cursor-pointer">
                 LEVEL SELANJUTNYA ➔
             </button>
         </div>
     </div>
 
     <!-- 3. Game Over Modal -->
-    <div id="gameOverModal" class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 p-4 hidden">
-        <div class="glass-panel p-6 md:p-8 rounded-3xl max-w-md w-full text-center border-2 border-red-500/40">
+    <div id="gameOverModal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4 hidden">
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl max-w-md w-full text-center border-2 border-red-500/50 shadow-2xl">
             <div class="text-5xl mb-2">💦</div>
             <h2 class="text-3xl font-game text-red-400 mb-1">BYURRR! TENGGELAM!</h2>
-            <p class="text-emerald-200 text-sm mb-4">Katak melompat terlalu jauh atau mis-kalkulasi teratai!</p>
+            <p class="text-emerald-200 text-xs sm:text-sm mb-4">Lompatan kurang tepat atau meleset dari teratai!</p>
 
-            <div class="bg-emerald-900/60 p-4 rounded-2xl my-4 border border-emerald-500/30">
-                <div class="text-xs text-emerald-300 uppercase font-bold">Skor Akhir</div>
+            <div class="bg-emerald-950/70 p-4 rounded-2xl my-4 border border-emerald-500/40">
+                <div class="text-xs text-emerald-300 uppercase font-bold tracking-wider">Skor Akhir</div>
                 <div id="finalScoreText" class="text-4xl font-game text-yellow-400 my-1">0</div>
             </div>
 
-            <div class="flex space-x-3">
-                <button id="retryBtn" class="flex-1 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-game text-lg rounded-xl shadow-lg border border-emerald-300/50 btn-bounce">
-                    COBA LAGI 🔄
-                </button>
-            </div>
+            <button id="retryBtn" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-game text-lg rounded-2xl shadow-xl border border-emerald-300/50 btn-bounce cursor-pointer">
+                COBA LAGI 🔄
+            </button>
         </div>
     </div>
 
-    <!-- Game Script Logic -->
     <script>
-        // Web Audio API Synthesizer Sound Generator (No external files required)
+        // Web Audio API Synthesizer (No external sound assets needed)
         class AudioFX {
             constructor() {
                 this.ctx = null;
@@ -188,148 +191,167 @@
 
             init() {
                 if (!this.ctx) {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    this.ctx = new AudioContext();
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        this.ctx = new AudioCtx();
+                    }
                 }
-                if (this.ctx.state === 'suspended') {
+                if (this.ctx && this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
             }
 
             playJump() {
                 if (this.muted || !this.ctx) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                
-                const now = this.ctx.currentTime;
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.exponentialRampToValueAtTime(450, now + 0.2);
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(160, now);
+                    osc.frequency.exponentialRampToValueAtTime(480, now + 0.18);
 
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
 
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.2);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.18);
+                } catch(e) {}
             }
 
             playSplash() {
                 if (this.muted || !this.ctx) return;
-                const now = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'triangle';
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(70, now + 0.3);
 
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.exponentialRampToValueAtTime(60, now + 0.35);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
 
-                gain.gain.setValueAtTime(0.4, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start(now);
-                osc.stop(now + 0.35);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } catch(e) {}
             }
 
             playSuccess() {
                 if (this.muted || !this.ctx) return;
-                const now = this.ctx.currentTime;
-                [400, 550, 700].forEach((freq, i) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                try {
+                    const now = this.ctx.currentTime;
+                    [420, 560, 700].forEach((freq, i) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + i * 0.07);
 
-                    gain.gain.setValueAtTime(0.2, now + i * 0.08);
-                    gain.gain.linearRampToValueAtTime(0.01, now + i * 0.08 + 0.15);
+                        gain.gain.setValueAtTime(0.2, now + i * 0.07);
+                        gain.gain.linearRampToValueAtTime(0.01, now + i * 0.07 + 0.12);
 
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(now + i * 0.08);
-                    osc.stop(now + i * 0.08 + 0.15);
-                });
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now + i * 0.07);
+                        osc.stop(now + i * 0.07 + 0.12);
+                    });
+                } catch(e) {}
             }
 
             playWin() {
                 if (this.muted || !this.ctx) return;
-                const now = this.ctx.currentTime;
-                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, now + i * 0.12);
+                try {
+                    const now = this.ctx.currentTime;
+                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + i * 0.1);
 
-                    gain.gain.setValueAtTime(0.3, now + i * 0.12);
-                    gain.gain.linearRampToValueAtTime(0.01, now + i * 0.12 + 0.25);
+                        gain.gain.setValueAtTime(0.25, now + i * 0.1);
+                        gain.gain.linearRampToValueAtTime(0.01, now + i * 0.1 + 0.2);
 
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(now + i * 0.12);
-                    osc.stop(now + i * 0.12 + 0.25);
-                });
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(now + i * 0.1);
+                        osc.stop(now + i * 0.1 + 0.2);
+                    });
+                } catch(e) {}
             }
         }
 
         const audio = new AudioFX();
 
-        // Levels configuration
         const LEVEL_DATA = [
-            { id: 1, name: "1 - Kolam Tenang", targetJumps: 5, padSpeed: 0, padRadius: 45, sinkTime: 0 },
-            { id: 2, name: "2 - Rawa Berangin", targetJumps: 7, padSpeed: 1.2, padRadius: 42, sinkTime: 0 },
-            { id: 3, name: "3 - Teratai Goyang", targetJumps: 9, padSpeed: 2.0, padRadius: 38, sinkTime: 0 },
-            { id: 4, name: "4 - Teratai Rapuh", targetJumps: 10, padSpeed: 1.5, padRadius: 36, sinkTime: 2500 },
-            { id: 5, name: "5 - Maestro Kolam Emas", targetJumps: 12, padSpeed: 2.5, padRadius: 34, sinkTime: 2000 }
+            { id: 1, name: "1 - Kolam Tenang", targetJumps: 5, padSpeed: 0, padRadius: 44 },
+            { id: 2, name: "2 - Rawa Berangin", targetJumps: 6, padSpeed: 1.2, padRadius: 40 },
+            { id: 3, name: "3 - Teratai Goyang", targetJumps: 8, padSpeed: 2.0, padRadius: 36 },
+            { id: 4, name: "4 - Arus Deras", targetJumps: 10, padSpeed: 2.6, padRadius: 34 },
+            { id: 5, name: "5 - Raja Kolam Emas", targetJumps: 12, padSpeed: 3.2, padRadius: 32 }
         ];
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Game State Variables
-        let gameState = 'START'; // 'START', 'PLAYING', 'LANDING', 'SPLASH', 'LEVEL_WIN', 'GAME_OVER'
+        // Game Engine Variables
+        let gameState = 'START'; 
         let currentLevelIndex = 0;
         let score = 0;
         let successfulJumps = 0;
 
-        // Input & Power Charging
+        // Input & Power Charge
         let isCharging = false;
-        let chargePower = 0; // 0 to 100
+        let chargePower = 0;
         let chargeDirection = 1;
 
-        // Visual Particles & Ripples
+        // Visual Effects
         let particles = [];
         let ripples = [];
         let flies = [];
 
-        // Dynamic Sizing
-        let width = canvas.width;
-        let height = canvas.height;
+        // Canvas Scale & Resolution Setup (HiDPI Retina support)
+        let logicalWidth = 400;
+        let logicalHeight = 600;
 
         function resizeCanvas() {
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-            width = canvas.width;
-            height = canvas.height;
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            
+            logicalWidth = rect.width;
+            logicalHeight = rect.height;
+
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+
+            ctx.resetTransform();
+            ctx.scale(dpr, dpr);
         }
 
-        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            if (gameState === 'PLAYING' && lilyPads.length >= 2) {
+                // Adjust positions on window resize
+                lilyPads[0].x = logicalWidth / 2;
+                lilyPads[0].y = logicalHeight - 110;
+                frog.x = lilyPads[0].x;
+                frog.y = lilyPads[0].y;
+            }
+        });
 
-        // Frog Character Object
+        // Frog Character
         const frog = {
             x: 0,
             y: 0,
-            radius: 20,
+            radius: 18,
             startX: 0,
             startY: 0,
             targetX: 0,
             targetY: 0,
             jumpProgress: 0,
-            jumpHeight: 0,
-            maxJumpDist: 0,
-            angle: 0,
             scaleX: 1,
             scaleY: 1,
             isAirborne: false,
@@ -351,10 +373,9 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
 
-                // Calculate squeeze/stretch based on charging or jumping
                 if (isCharging) {
-                    this.scaleX = 1 + (chargePower / 200);
-                    this.scaleY = 1 - (chargePower / 300);
+                    this.scaleX = 1 + (chargePower / 220);
+                    this.scaleY = 1 - (chargePower / 320);
                 } else if (this.isAirborne) {
                     this.scaleX = 0.85;
                     this.scaleY = 1.25;
@@ -365,68 +386,68 @@
 
                 ctx.scale(this.scaleX, this.scaleY);
 
-                // Shadow under frog when jumping
+                // Shadow during airborne jump
                 if (this.isAirborne) {
                     ctx.save();
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
                     ctx.beginPath();
-                    ctx.ellipse(0, 30, this.radius * 0.8, this.radius * 0.4, 0, 0, Math.PI * 2);
+                    ctx.ellipse(0, 28, this.radius * 0.8, this.radius * 0.35, 0, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.restore();
                 }
 
-                // Frog Body (Green Oval)
+                // Green Frog Body
                 ctx.fillStyle = '#4ade80';
                 ctx.beginPath();
                 ctx.ellipse(0, 0, this.radius * 1.1, this.radius, 0, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.lineWidth = 3;
+                ctx.lineWidth = 2.5;
                 ctx.strokeStyle = '#15803d';
                 ctx.stroke();
 
-                // Eyes
+                // Frog Eyes
                 // Left Eye
                 ctx.fillStyle = '#4ade80';
                 ctx.beginPath();
-                ctx.arc(-this.radius * 0.55, -this.radius * 0.7, 8, 0, Math.PI * 2);
+                ctx.arc(-this.radius * 0.55, -this.radius * 0.65, 7, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
-                ctx.arc(-this.radius * 0.55, -this.radius * 0.7, 5, 0, Math.PI * 2);
+                ctx.arc(-this.radius * 0.55, -this.radius * 0.65, 4.5, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = '#000000';
                 ctx.beginPath();
-                ctx.arc(-this.radius * 0.5, -this.radius * 0.7, 2.5, 0, Math.PI * 2);
+                ctx.arc(-this.radius * 0.5, -this.radius * 0.65, 2, 0, Math.PI * 2);
                 ctx.fill();
 
                 // Right Eye
                 ctx.fillStyle = '#4ade80';
                 ctx.beginPath();
-                ctx.arc(this.radius * 0.55, -this.radius * 0.7, 8, 0, Math.PI * 2);
+                ctx.arc(this.radius * 0.55, -this.radius * 0.65, 7, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
-                ctx.arc(this.radius * 0.55, -this.radius * 0.7, 5, 0, Math.PI * 2);
+                ctx.arc(this.radius * 0.55, -this.radius * 0.65, 4.5, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = '#000000';
                 ctx.beginPath();
-                ctx.arc(this.radius * 0.6, -this.radius * 0.7, 2.5, 0, Math.PI * 2);
+                ctx.arc(this.radius * 0.6, -this.radius * 0.65, 2, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Cheeks (Blush)
+                // Cute Blush
                 ctx.fillStyle = 'rgba(251, 113, 133, 0.6)';
                 ctx.beginPath();
-                ctx.arc(-this.radius * 0.7, 2, 4, 0, Math.PI * 2);
-                ctx.arc(this.radius * 0.7, 2, 4, 0, Math.PI * 2);
+                ctx.arc(-this.radius * 0.65, 2, 3.5, 0, Math.PI * 2);
+                ctx.arc(this.radius * 0.65, 2, 3.5, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Cute Smile
+                // Smile
                 ctx.strokeStyle = '#166534';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.arc(0, 2, 5, 0.1 * Math.PI, 0.9 * Math.PI);
+                ctx.arc(0, 2, 4.5, 0.1 * Math.PI, 0.9 * Math.PI);
                 ctx.stroke();
 
                 ctx.restore();
@@ -445,55 +466,47 @@
                 this.dir = Math.random() < 0.5 ? 1 : -1;
                 this.isCurrent = isCurrent;
                 this.flowerColor = ['#f472b6', '#fbbf24', '#a78bfa'][Math.floor(Math.random() * 3)];
-                this.sinking = false;
-                this.sinkTimer = 0;
-                this.opacity = 1;
             }
 
-            update(canvasWidth) {
+            update(maxWidth) {
                 if (this.speed !== 0 && !this.isCurrent) {
                     this.x += this.speed * this.dir;
-                    // Bounce off edge padding
-                    const padding = this.radius + 20;
-                    if (this.x < padding) {
-                        this.x = padding;
+                    const margin = this.radius + 15;
+                    if (this.x < margin) {
+                        this.x = margin;
                         this.dir *= -1;
-                    } else if (this.x > canvasWidth - padding) {
-                        this.x = canvasWidth - padding;
+                    } else if (this.x > maxWidth - margin) {
+                        this.x = maxWidth - margin;
                         this.dir *= -1;
                     }
                 }
             }
 
             draw() {
-                if (this.opacity <= 0) return;
-
                 ctx.save();
-                ctx.globalAlpha = this.opacity;
                 ctx.translate(this.x, this.y);
 
-                // Water Shadow under lily pad
-                ctx.fillStyle = 'rgba(6, 78, 59, 0.4)';
+                // Water Shadow
+                ctx.fillStyle = 'rgba(6, 78, 59, 0.35)';
                 ctx.beginPath();
-                ctx.arc(4, 6, this.radius, 0, Math.PI * 2);
+                ctx.arc(3, 5, this.radius, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Green Lily Pad Base
+                // Green Lily Pad Circle with Cutout
                 ctx.fillStyle = this.isCurrent ? '#10b981' : '#059669';
                 ctx.beginPath();
-                // Draw circle with a triangular wedge cut out (classic lily pad look)
                 ctx.arc(0, 0, this.radius, 0.25 * Math.PI, 1.9 * Math.PI);
                 ctx.lineTo(0, 0);
                 ctx.closePath();
                 ctx.fill();
 
-                ctx.lineWidth = 3;
+                ctx.lineWidth = 2.5;
                 ctx.strokeStyle = '#047857';
                 ctx.stroke();
 
-                // Veins on Pad
-                ctx.strokeStyle = 'rgba(167, 243, 208, 0.3)';
-                ctx.lineWidth = 2;
+                // Vein Lines
+                ctx.strokeStyle = 'rgba(167, 243, 208, 0.35)';
+                ctx.lineWidth = 1.5;
                 for (let i = 0; i < 4; i++) {
                     const angle = (i * Math.PI / 2.5) + 0.5;
                     ctx.beginPath();
@@ -502,27 +515,26 @@
                     ctx.stroke();
                 }
 
-                // Decorative Flower in Center
+                // Center Flower
                 ctx.fillStyle = this.flowerColor;
                 ctx.beginPath();
-                ctx.arc(0, 0, this.radius * 0.25, 0, Math.PI * 2);
+                ctx.arc(0, 0, this.radius * 0.22, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = '#fef08a';
                 ctx.beginPath();
-                ctx.arc(0, 0, this.radius * 0.1, 0, Math.PI * 2);
+                ctx.arc(0, 0, this.radius * 0.09, 0, Math.PI * 2);
                 ctx.fill();
 
                 ctx.restore();
             }
         }
 
-        // Create Flies/Bugs for extra score
         function spawnFlies(padX, padY) {
-            if (Math.random() < 0.6) {
+            if (Math.random() < 0.65) {
                 flies.push({
                     x: padX + (Math.random() - 0.5) * 40,
-                    y: padY - 30 - Math.random() * 30,
-                    radius: 4,
+                    y: padY - 30 - Math.random() * 25,
+                    radius: 3.5,
                     collected: false,
                     angle: Math.random() * Math.PI * 2
                 });
@@ -535,21 +547,21 @@
 
             const lvl = LEVEL_DATA[currentLevelIndex];
             const padRadius = lvl.padRadius;
-            const startX = width / 2;
-            const startY = height - 120;
+            const startX = logicalWidth / 2;
+            const startY = logicalHeight - 110;
 
-            // Current Starting Lily Pad
-            lilyPads.push(new LilyPad(startX, startY, padRadius + 10, 0, true));
+            // Current Lily Pad
+            lilyPads.push(new LilyPad(startX, startY, padRadius + 8, 0, true));
             frog.reset(startX, startY);
 
             // Target Lily Pad
-            const targetX = width * (0.3 + Math.random() * 0.4);
-            const targetY = height * 0.35;
+            const targetX = logicalWidth * (0.28 + Math.random() * 0.44);
+            const targetY = logicalHeight * 0.38;
 
             lilyPads.push(new LilyPad(targetX, targetY, padRadius, lvl.padSpeed, false));
             spawnFlies(targetX, targetY);
 
-            // Set HUD target text
+            // Update UI HUD
             document.getElementById('targetDisplay').innerText = `${successfulJumps}/${lvl.targetJumps}`;
             document.getElementById('levelDisplay').innerText = lvl.name;
         }
@@ -566,18 +578,13 @@
             isCharging = false;
             document.getElementById('powerContainer').classList.add('opacity-0');
 
-            // Launch Frog!
             const currentPad = lilyPads[0];
             const targetPad = lilyPads[1];
 
-            // Calculate jump vector towards target pad
             const distanceFactor = (chargePower / 100);
-            
-            // Max jump distance is tuned to reach slightly past the target pad
             const distToTarget = Math.hypot(targetPad.x - currentPad.x, targetPad.y - currentPad.y);
-            const totalJumpDist = distToTarget * (distanceFactor * 1.5);
+            const totalJumpDist = distToTarget * (distanceFactor * 1.48);
 
-            // Direction vector
             const angle = Math.atan2(targetPad.y - currentPad.y, targetPad.x - currentPad.x);
 
             frog.startX = frog.x;
@@ -586,14 +593,13 @@
             frog.targetY = frog.y + Math.sin(angle) * totalJumpDist;
 
             frog.jumpProgress = 0;
-            frog.maxJumpDist = totalJumpDist;
             frog.isAirborne = true;
 
             audio.playJump();
             chargePower = 0;
         }
 
-        // Keyboard Spacebar events
+        // Event Listeners (Keyboard + Mouse + Touch)
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space' && !e.repeat) {
                 e.preventDefault();
@@ -608,41 +614,40 @@
             }
         });
 
-        // Touch & Mouse Canvas Events
-        canvas.addEventListener('mousedown', (e) => {
+        // Touch & Mouse Support on Canvas
+        const handleTouchStart = (e) => {
+            if (e.target.closest('#soundBtn')) return;
             e.preventDefault();
             startCharging();
-        });
-        canvas.addEventListener('mouseup', (e) => {
-            e.preventDefault();
-            releaseJump();
-        });
+        };
 
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            startCharging();
-        });
-        canvas.addEventListener('touchend', (e) => {
+        const handleTouchEnd = (e) => {
+            if (e.target.closest('#soundBtn')) return;
             e.preventDefault();
             releaseJump();
-        });
+        };
+
+        canvas.addEventListener('mousedown', handleTouchStart);
+        canvas.addEventListener('mouseup', handleTouchEnd);
+        canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+        canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
 
         function createSplash(x, y) {
             for (let i = 0; i < 16; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = 2 + Math.random() * 5;
+                const speed = 2 + Math.random() * 4.5;
                 particles.push({
                     x: x,
                     y: y,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
-                    radius: 3 + Math.random() * 4,
+                    radius: 2.5 + Math.random() * 3.5,
                     color: '#a5f3fc',
                     life: 1,
-                    decay: 0.03
+                    decay: 0.035
                 });
             }
-            ripples.push({ x, y, radius: 5, maxRadius: 40, opacity: 1 });
+            ripples.push({ x, y, radius: 4, maxRadius: 36, opacity: 1 });
         }
 
         function createSparkles(x, y) {
@@ -657,7 +662,7 @@
                     radius: 2 + Math.random() * 3,
                     color: '#fef08a',
                     life: 1,
-                    decay: 0.02
+                    decay: 0.025
                 });
             }
         }
@@ -666,27 +671,23 @@
             const targetPad = lilyPads[1];
             const dist = Math.hypot(frog.x - targetPad.x, frog.y - targetPad.y);
 
-            // Check if landed inside lily pad radius
-            if (dist <= targetPad.radius + (frog.radius * 0.5)) {
-                // SUCCESS LANDING!
+            // Check if within lily pad bounds
+            if (dist <= targetPad.radius + (frog.radius * 0.4)) {
                 audio.playSuccess();
                 createSparkles(frog.x, frog.y);
 
-                // Calculate Precision Bonus
                 let bonus = 100;
                 if (dist < 12) {
-                    bonus += 50; // Perfect Center Bonus!
+                    bonus += 50; // Perfect Center Landing Bonus
                 }
 
                 score += bonus;
                 successfulJumps++;
 
                 document.getElementById('scoreDisplay').innerText = score;
-                
                 const lvl = LEVEL_DATA[currentLevelIndex];
                 document.getElementById('targetDisplay').innerText = `${successfulJumps}/${lvl.targetJumps}`;
 
-                // Check Level Completion
                 if (successfulJumps >= lvl.targetJumps) {
                     setTimeout(() => {
                         audio.playWin();
@@ -694,18 +695,15 @@
                             document.getElementById('levelScoreText').innerText = score;
                             document.getElementById('levelModal').classList.remove('hidden');
                         } else {
-                            // Won all levels
-                            document.getElementById('levelCompleteSub').innerText = "SELAMAT! Kamu Menamatkan Seluruh Kolam!";
+                            document.getElementById('levelCompleteSub').innerText = "SELAMAT! Kamu Menamatkan Semua Kolam!";
                             document.getElementById('levelScoreText').innerText = score;
                             document.getElementById('levelModal').classList.remove('hidden');
                         }
-                    }, 400);
+                    }, 350);
                 } else {
-                    // Shift pads for next jump animation
-                    setTimeout(shiftPadsForward, 300);
+                    setTimeout(shiftPadsForward, 280);
                 }
             } else {
-                // SPLASH - FELL IN WATER
                 audio.playSplash();
                 createSplash(frog.x, frog.y);
                 gameState = 'SPLASH';
@@ -713,31 +711,28 @@
                 setTimeout(() => {
                     document.getElementById('finalScoreText').innerText = score;
                     document.getElementById('gameOverModal').classList.remove('hidden');
-                }, 800);
+                }, 750);
             }
         }
 
         function shiftPadsForward() {
-            // Target pad becomes starting pad, new target pad generated
-            lilyPads.shift(); // Remove old start pad
+            lilyPads.shift();
             lilyPads[0].isCurrent = true;
 
-            // Smoothly move frog & pads back down to starting position base
             const lvl = LEVEL_DATA[currentLevelIndex];
-            const newTargetX = width * (0.25 + Math.random() * 0.5);
-            const newTargetY = height * 0.35;
+            const newTargetX = logicalWidth * (0.25 + Math.random() * 0.5);
+            const newTargetY = logicalHeight * 0.38;
 
             lilyPads.push(new LilyPad(newTargetX, newTargetY, lvl.padRadius, lvl.padSpeed, false));
             spawnFlies(newTargetX, newTargetY);
 
-            // Reposition frog smoothly to new current pad
             frog.reset(lilyPads[0].x, lilyPads[0].y);
         }
 
         function update() {
-            // Power Charging Oscillate
+            // Charging Power Oscillation
             if (isCharging) {
-                chargePower += 2.5 * chargeDirection;
+                chargePower += 2.4 * chargeDirection;
                 if (chargePower >= 100) {
                     chargePower = 100;
                     chargeDirection = -1;
@@ -749,18 +744,17 @@
                 document.getElementById('powerPercent').innerText = Math.round(chargePower) + '%';
             }
 
-            // Lily pads update
-            lilyPads.forEach(pad => pad.update(width));
+            // Update Lily Pads
+            lilyPads.forEach(pad => pad.update(logicalWidth));
 
-            // Flies Floating & Collection
+            // Flies Update & Catch Collision
             flies.forEach(fly => {
                 fly.angle += 0.05;
-                fly.y += Math.sin(fly.angle) * 0.5;
+                fly.y += Math.sin(fly.angle) * 0.4;
 
-                // Fly eat collision
                 if (frog.isAirborne && !fly.collected) {
                     const d = Math.hypot(frog.x - fly.x, frog.y - fly.y);
-                    if (d < frog.radius + 15) {
+                    if (d < frog.radius + 12) {
                         fly.collected = true;
                         score += 50;
                         document.getElementById('scoreDisplay').innerText = score;
@@ -769,7 +763,7 @@
                 }
             });
 
-            // Frog Airborne Arc Physics
+            // Frog Arc Jumping Physics
             if (frog.isAirborne) {
                 frog.jumpProgress += 0.045;
 
@@ -780,17 +774,16 @@
                     frog.y = frog.targetY;
                     checkLanding();
                 } else {
-                    // Linear interpolation for X, Y plus arc curve for height
                     frog.x = frog.startX + (frog.targetX - frog.startX) * frog.jumpProgress;
                     frog.y = frog.startY + (frog.targetY - frog.startY) * frog.jumpProgress;
 
-                    // Arc Height parabola: h = 4 * H * t * (1 - t)
-                    const arcHeight = 120 * Math.sin(frog.jumpProgress * Math.PI);
+                    // Parabolic Arc Height
+                    const arcHeight = 110 * Math.sin(frog.jumpProgress * Math.PI);
                     frog.y -= arcHeight;
                 }
             }
 
-            // Update Particles
+            // Particles Update
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
                 p.x += p.vx;
@@ -799,39 +792,39 @@
                 if (p.life <= 0) particles.splice(i, 1);
             }
 
-            // Update Ripples
+            // Ripples Update
             for (let i = ripples.length - 1; i >= 0; i--) {
                 const r = ripples[i];
-                r.radius += 1.5;
+                r.radius += 1.4;
                 r.opacity -= 0.025;
                 if (r.opacity <= 0) ripples.splice(i, 1);
             }
         }
 
         function drawBackground() {
-            // Water Gradient
-            const grad = ctx.createLinearGradient(0, 0, 0, height);
+            // Water Gradient Background
+            const grad = ctx.createLinearGradient(0, 0, 0, logicalHeight);
             grad.addColorStop(0, '#042f2e');
             grad.addColorStop(0.5, '#0d9488');
             grad.addColorStop(1, '#115e59');
             ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, width, height);
+            ctx.fillRect(0, 0, logicalWidth, logicalHeight);
 
-            // Subtle Water Waves Lines
+            // Subtle Water Ripple Lines
             ctx.strokeStyle = 'rgba(204, 251, 241, 0.08)';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1.5;
             const time = Date.now() * 0.001;
-            for (let y = 40; y < height; y += 60) {
+            for (let y = 30; y < logicalHeight; y += 55) {
                 ctx.beginPath();
-                for (let x = 0; x < width; x += 20) {
-                    const waveY = y + Math.sin(x * 0.02 + time) * 4;
+                for (let x = 0; x < logicalWidth; x += 18) {
+                    const waveY = y + Math.sin(x * 0.02 + time) * 3.5;
                     if (x === 0) ctx.moveTo(x, waveY);
                     else ctx.lineTo(x, waveY);
                 }
                 ctx.stroke();
             }
 
-            // Draw Ripples
+            // Splash Water Ripples
             ripples.forEach(r => {
                 ctx.strokeStyle = `rgba(165, 243, 252, ${r.opacity})`;
                 ctx.lineWidth = 2;
@@ -842,41 +835,40 @@
         }
 
         function render() {
-            ctx.clearRect(0, 0, width, height);
+            ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 
             // 1. Draw Background Water
             drawBackground();
 
-            // 2. Trajectory Hint Arc (when charging power)
+            // 2. Trajectory Helper Line (while charging)
             if (isCharging && lilyPads.length > 1) {
                 const currentPad = lilyPads[0];
                 const targetPad = lilyPads[1];
                 const distToTarget = Math.hypot(targetPad.x - currentPad.x, targetPad.y - currentPad.y);
-                const totalJumpDist = distToTarget * ((chargePower / 100) * 1.5);
+                const totalJumpDist = distToTarget * ((chargePower / 100) * 1.48);
                 const angle = Math.atan2(targetPad.y - currentPad.y, targetPad.x - currentPad.x);
 
                 const projectedX = currentPad.x + Math.cos(angle) * totalJumpDist;
                 const projectedY = currentPad.y + Math.sin(angle) * totalJumpDist;
 
-                // Dotted arc line
                 ctx.save();
-                ctx.strokeStyle = 'rgba(254, 240, 138, 0.7)';
-                ctx.lineWidth = 3;
-                ctx.setLineDash([6, 6]);
+                ctx.strokeStyle = 'rgba(254, 240, 138, 0.75)';
+                ctx.lineWidth = 2.5;
+                ctx.setLineDash([5, 5]);
                 ctx.beginPath();
                 ctx.moveTo(currentPad.x, currentPad.y);
                 ctx.quadraticCurveTo(
                     (currentPad.x + projectedX) / 2,
-                    Math.min(currentPad.y, projectedY) - 80,
+                    Math.min(currentPad.y, projectedY) - 75,
                     projectedX,
                     projectedY
                 );
                 ctx.stroke();
 
-                // Target Marker Crosshair
+                // Target Landing Spot Marker
                 ctx.fillStyle = '#fde047';
                 ctx.beginPath();
-                ctx.arc(projectedX, projectedY, 6, 0, Math.PI * 2);
+                ctx.arc(projectedX, projectedY, 5.5, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
             }
@@ -892,22 +884,23 @@
                     ctx.beginPath();
                     ctx.arc(fly.x, fly.y, fly.radius, 0, Math.PI * 2);
                     ctx.fill();
-                    // Small wings animation
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+
+                    // Wings animation
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
                     ctx.beginPath();
-                    ctx.ellipse(fly.x - 3, fly.y - 3, 4, 2, Math.PI / 4, 0, Math.PI * 2);
-                    ctx.ellipse(fly.x + 3, fly.y - 3, 4, 2, -Math.PI / 4, 0, Math.PI * 2);
+                    ctx.ellipse(fly.x - 2.5, fly.y - 2.5, 3.5, 1.8, Math.PI / 4, 0, Math.PI * 2);
+                    ctx.ellipse(fly.x + 2.5, fly.y - 2.5, 3.5, 1.8, -Math.PI / 4, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.restore();
                 }
             });
 
-            // 5. Draw Frog Character
+            // 5. Draw Frog
             if (gameState !== 'SPLASH') {
                 frog.draw();
             }
 
-            // 6. Draw Particles (Splashes / Sparkles)
+            // 6. Draw Particles
             particles.forEach(p => {
                 ctx.fillStyle = p.color;
                 ctx.globalAlpha = p.life;
@@ -924,7 +917,6 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Start / Restart Handlers
         function startGame() {
             score = 0;
             successfulJumps = 0;
@@ -941,7 +933,6 @@
         }
 
         document.getElementById('startBtn').addEventListener('click', startGame);
-        
         document.getElementById('retryBtn').addEventListener('click', startGame);
 
         document.getElementById('nextLevelBtn').addEventListener('click', () => {
@@ -956,18 +947,20 @@
             }
         });
 
-        // Sound Mute Toggle
+        // Sound Mute Toggle Button
         const soundBtn = document.getElementById('soundBtn');
-        soundBtn.addEventListener('click', () => {
+        soundBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            audio.init();
             audio.muted = !audio.muted;
             soundBtn.innerText = audio.muted ? '🔇' : '🔊';
         });
 
-        // Init Game Engine Loop on Window Load
-        window.onload = () => {
+        // Boot Game on Window Load
+        window.addEventListener('load', () => {
             resizeCanvas();
             gameLoop();
-        };
+        });
     </script>
 </body>
 </html>
